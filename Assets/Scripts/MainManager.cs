@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using TMPro;
 
 public class MainManager : MonoBehaviour
 {
@@ -11,17 +12,27 @@ public class MainManager : MonoBehaviour
     public Rigidbody Ball;
 
     public Text ScoreText;
-    public GameObject GameOverText;
+    public GameObject GameOverTextShort;
+    public GameObject GameOverTextLong;
+    public GameObject highScoreText;
     
     private bool m_Started = false;
     private int m_Points;
     
-    private bool m_GameOver = false;
+    public bool m_GameOver = false;
 
-    
+    public GameManager gameManager;
+
+    public TMP_InputField inputText;
+    public Button submitButton;
+
+
     // Start is called before the first frame update
     void Start()
     {
+
+        gameManager = GameObject.Find("GameManager").GetComponent<GameManager>();
+
         const float step = 0.6f;
         int perLine = Mathf.FloorToInt(4.0f / step);
         
@@ -53,13 +64,18 @@ public class MainManager : MonoBehaviour
                 Ball.AddForce(forceDir * 2.0f, ForceMode.VelocityChange);
             }
         }
-        else if (m_GameOver)
+        else if (m_GameOver && m_Points < gameManager.highScore)
         {
             if (Input.GetKeyDown(KeyCode.Space))
             {
                 SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
             }
+            if (Input.GetKeyDown(KeyCode.H))
+            {
+                SceneManager.LoadScene(2);
+            }
         }
+        
     }
 
     void AddPoint(int point)
@@ -71,6 +87,27 @@ public class MainManager : MonoBehaviour
     public void GameOver()
     {
         m_GameOver = true;
-        GameOverText.SetActive(true);
+        
+        if (m_Points > gameManager.highScore)
+        {
+            highScoreText.SetActive(true);
+            submitButton.gameObject.SetActive(true);
+            inputText.gameObject.SetActive(true);
+            GameOverTextShort.SetActive(true);
+
+            Button btn = submitButton.GetComponent<Button>();
+            btn.onClick.AddListener(SubmitButton);
+            gameManager.SaveGameData(inputText.text, m_Points);
+        }
+        else
+        {
+            GameOverTextLong.SetActive(true);
+        }
+    }
+    private void SubmitButton()
+    {
+        Debug.Log("Name Saved as: " + inputText.text);
+        gameManager.SaveGameData(inputText.text, m_Points);
+        SceneManager.LoadScene(2);
     }
 }
